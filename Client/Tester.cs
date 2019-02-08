@@ -14,6 +14,8 @@ namespace Client
 
         private static readonly List<string[]> TestArgs = new List<string[]>
         {
+            new[] {"upload", "c:\\Code\\testfiles\\hello.txt", "-p", "hellotest"},
+            new[] {"download", "hello.txt", "-p", "hellotest"},
             new[] {"upload", TESTFILEPATH, "-p", "pwpwpw" },
             new[] {"download", TESTFILENAME, "-p", "pwpwpw" },
             new[] {"upload", TESTFILEPATH2, TESTFILEPATH3, "-p", "pazzwerd"},

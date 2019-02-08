@@ -1,5 +1,7 @@
 using Core.Dto;
+using System;
 using System.IO;
+using System.IO.Compression;
 using System.Net.Sockets;
 using System.Xml.Serialization;
 using static Core.Constants;
@@ -47,9 +49,12 @@ namespace Client
 
                     // Serialize request to server
                     requestSerializer.Serialize(stream, fileUploadInfo);
-                    using (var fileStream = File.OpenWrite(fileName))
+                    using (FileStream decompressedFileStream = File.Create(fileName))
                     {
-                        stream.CopyTo(fileStream);
+                        using (GZipStream decompressionStream = new GZipStream(stream, CompressionMode.Decompress))
+                        {
+                            decompressionStream.CopyTo(decompressedFileStream);
+                        }
                     }
                 }
             }
@@ -87,10 +92,22 @@ namespace Client
                     {
                         return false;
                     }
-
-                    using (var fileStream = File.Open(fileInfo.FullName, FileMode.Open))
+                    try
                     {
-                        fileStream.CopyTo(stream);
+                        using (var fileStream = File.Open(fileInfo.FullName, FileMode.Open))
+                        {
+                            using (GZipStream compressionStream = new GZipStream(stream,
+                           CompressionMode.Compress))
+                            {
+                                fileStream.CopyTo(compressionStream);
+
+                            }
+                        }
+                    }
+                    catch (System.IO.FileNotFoundException e)
+                    {
+                        Console.WriteLine(e.Message);
+                        return false;
                     }
                 }
             }

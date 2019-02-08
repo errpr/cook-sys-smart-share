@@ -29,7 +29,7 @@ namespace Server
             {
                 var client = listener.AcceptTcpClient();
                 Console.WriteLine("Received connection.");
-                Task.Run(() => ClientHandler(client));
+                ClientHandler(client);
             }
         }
 
@@ -92,17 +92,24 @@ namespace Server
             var connection = context.Database.GetDbConnection();
 
             // check if file already exists, and if that file is expired we can delete it and continue the upload.
-            var possibleFile = context.UploadedFiles.First(x => x.Name == requestInfo.FileName);
-            if (possibleFile != null)
+            try
             {
-                if (possibleFile.DownloadsExceeded() || possibleFile.IsExpired())
+                var possibleFile = context.UploadedFiles.First(x => x.Name == requestInfo.FileName);
+                if (possibleFile != null)
                 {
-                    possibleFile.Delete(context);
+                    if (possibleFile.DownloadsExceeded() || possibleFile.IsExpired())
+                    {
+                        possibleFile.Delete(context);
+                    }
+                    else
+                    {
+                        return;
+                    }
                 }
-                else
-                {
-                    return;
-                }
+            }
+            catch (InvalidOperationException e)
+            {
+                Console.WriteLine("File table is empty");
             }
 
             if (connection is NpgsqlConnection)
@@ -141,6 +148,11 @@ namespace Server
         {
             var context = new SmartShareContext();
             var file = context.UploadedFiles.First(x => x.Name == requestInfo.FileName);
+            if (file == null)
+            {
+                return;
+            }
+
             if (!(file.Password == requestInfo.Password))
             {
                 return;
