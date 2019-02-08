@@ -1,26 +1,23 @@
-using System;
-using System.IO;
+using System.Collections.Generic;
 using Client.Utils;
 using CommandLine;
+using static Core.Constants;
 
 namespace Client.Options
 {
-    [Verb("upload", HelpText = "Uploads a file")]
+    [Verb("upload", HelpText = "Uploads a file or files.")]
     public class UploadOptions
-    {
-        [Value(0, MetaName = "filename", HelpText = "The file to be uploaded", Required = true)]
-        public string FileName { get; set; }
+    {   
+        [Value(0, MetaName = "files", HelpText = "Path(s) to the file(s) to be uploaded.", Required = true)]
+        public IEnumerable<string> FilePaths { get; set; }
 
-        [Value(1, MetaName = "password", HelpText = "Password for the file", Required = false)]
+        [Option('p', "password", HelpText = "Password for the file(s).", Required = false)]
         public string Password { get; set; } = PasswordGenerator.Generate();
-        
-        public static int ExecuteUploadAndReturnExitCode(UploadOptions options)
-        {
-            // TODO
-            var file = new FileInfo(options.FileName);
-            Console.WriteLine($"Uploading {file.FullName}");
-            Console.WriteLine($"Password: {options.Password}");
-            return 0;
-        }
+
+        [Option('m', "maxDownloads", HelpText = "Maximum allowed downloads", Required = false)]
+        public int? MaxDownloads { get; set; }
+
+        [Option('d', "duration", Default = DURATION_DEFAULT, HelpText = "How long (in minutes) the file(s) should be available.", Required = false)]
+        public int Duration { get; set; }
     }
 }
