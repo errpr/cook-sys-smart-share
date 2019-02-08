@@ -29,7 +29,7 @@ namespace Server
             {
                 var client = listener.AcceptTcpClient();
                 Console.WriteLine("Received connection.");
-                ClientHandler(client);
+                Task.Run(() => ClientHandler(client));
             }
         }
 
