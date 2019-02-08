@@ -49,6 +49,14 @@ namespace Client
 
                     // Serialize request to server
                     requestSerializer.Serialize(stream, fileUploadInfo);
+
+                    var responseByte = new byte[1];
+                    stream.Read(responseByte);
+                    if (responseByte[0] == FAIL_BYTE)
+                    {
+                        return false;
+                    }
+
                     using (FileStream decompressedFileStream = File.Create(fileName))
                     {
                         using (GZipStream decompressionStream = new GZipStream(stream, CompressionMode.Decompress))
@@ -58,8 +66,9 @@ namespace Client
                     }
                 }
             }
-            catch
+            catch (Exception e)
             {
+                Console.WriteLine(e.Message);
                 return false;
             }
             return true;

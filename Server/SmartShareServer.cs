@@ -87,7 +87,6 @@ namespace Server
 
         static void HandleUpload(NetworkStream stream, FileRequestInfo requestInfo)
         {
-            stream.Write(new byte[1] { ACK_BYTE }); // let client know we're ready to receive
             var context = new SmartShareContext();
             var connection = context.Database.GetDbConnection();
 
@@ -111,6 +110,8 @@ namespace Server
             {
                 Console.WriteLine("File table is empty");
             }
+
+            stream.Write(new byte[1] { ACK_BYTE }); // let client know we're ready to receive
 
             if (connection is NpgsqlConnection)
             {
@@ -150,21 +151,25 @@ namespace Server
             var file = context.UploadedFiles.First(x => x.Name == requestInfo.FileName);
             if (file == null)
             {
+                stream.Write(new byte[] { FAIL_BYTE });
                 return;
             }
 
             if (!(file.Password == requestInfo.Password))
             {
+                stream.Write(new byte[] { FAIL_BYTE });
                 return;
             }
 
             if (file.DownloadsExceeded() || file.IsExpired())
             {
+                stream.Write(new byte[] { FAIL_BYTE });
                 stream.Close();
                 file.Delete(context);
                 return;
             }
 
+            stream.Write(new byte[] { ACK_BYTE });
             file.DownloadCount++;
             context.UploadedFiles.Update(file);
             context.SaveChanges();
